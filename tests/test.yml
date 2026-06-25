@@ -1,0 +1,9 @@
+---
+- name: Test roxagent role syntax
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    roxagent_virtctl_ssh: false
+  roles:
+    - role: sluetze.roxagent

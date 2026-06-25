@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  namespace: sluetze
+  role_name: roxagent
+  author: sluetze
+  description: >-
+    Install and configure RHACS roxagent for vulnerability scanning on RHEL 9 and
+    RHEL 10 virtual machines on OpenShift Virtualization (KubeVirt).
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+        - "10"
+  galaxy_tags:
+    - security
+    - rhacs
+    - roxagent
+    - openshift
+    - kubevirt
+
+dependencies: []
