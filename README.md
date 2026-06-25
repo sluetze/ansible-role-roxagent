@@ -67,7 +67,7 @@ ansible-galaxy role install sluetze.roxagent
 From Git:
 
 ```bash
-ansible-galaxy role install git+https://github.com/sluetze/roxagent.git
+ansible-galaxy role install git+https://github.com/sluetze/ansible-role-roxagent.git
 ```
 
 Or add to `requirements.yml`:
@@ -76,7 +76,7 @@ Or add to `requirements.yml`:
 roles:
   - name: sluetze.roxagent
     scm: git
-    src: https://github.com/sluetze/roxagent
+    src: https://github.com/sluetze/ansible-role-roxagent
 ```
 
 ## License
