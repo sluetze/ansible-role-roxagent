@@ -15,15 +15,35 @@
   changed_when: false
   failed_when: roxagent_subscription_status.rc != 0
 
-- name: Warn when vsock is not available
-  ansible.builtin.stat:
-    path: /dev/vsock
-  register: roxagent_vsock
+- name: Ensure virtio-vsock guest device is available for RHACS scanning
+  block:
+    - name: Load virtio-vsock guest kernel modules
+      ansible.builtin.command:
+        argv:
+          - modprobe
+          - "{{ item }}"
+      loop:
+        - vsock
+        - vmw_vsock_virtio_transport
+      register: roxagent_vsock_modprobe
+      changed_when: roxagent_vsock_modprobe.rc == 0
+      failed_when: false
 
-- name: Display vsock warning
-  ansible.builtin.debug:
-    msg: "/dev/vsock is not present; RHACS VM vulnerability scanning requires vsock on OCP-V."
-  when: not roxagent_vsock.stat.exists
+    - name: Verify virtio-vsock guest device is present
+      ansible.builtin.stat:
+        path: /dev/vsock
+      register: roxagent_vsock
+
+    - name: Fail when virtio-vsock guest device is missing
+      ansible.builtin.fail:
+        msg: >-
+          /dev/vsock is not present. RHACS roxagent requires the guest virtio-vsock
+          device to send scan reports to the node relay on OpenShift Virtualization.
+          /dev/vhost-vsock is the hypervisor vhost device and cannot be substituted.
+          Enable the KubeVirt VSOCK feature gate, set
+          spec.domain.devices.autoattachVSOCK: true on the VM, and restart the VM so
+          the virtio-vsock PCI device is attached.
+      when: not roxagent_vsock.stat.exists
 
 - name: Install Podman
   ansible.builtin.dnf:

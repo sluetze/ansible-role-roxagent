@@ -95,7 +95,7 @@
   ansible.builtin.set_fact:
     _roxagent_kubevirt_vm_name: "{{ _roxagent_vm_name_resolved }}"
     _roxagent_kubevirt_namespace: "{{ _roxagent_namespace_resolved }}"
-    _roxagent_ssh_user_resolved: "{{ _roxagent_ssh_user_resolved }}"
+    _roxagent_ssh_user_resolved: "{{ _roxagent_ssh_user_computed }}"
   vars:
     _roxagent_namespace_from_var: >-
       {{
@@ -204,7 +204,7 @@
           )
         )
       }}
-    _roxagent_ssh_user_resolved: >-
+    _roxagent_ssh_user_computed: >-
       {{
         roxagent_ansible_user | default('', true)
         if roxagent_ansible_user | default('', true) | length > 0
