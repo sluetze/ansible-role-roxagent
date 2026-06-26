@@ -85,7 +85,8 @@
     dest: "{{ roxagent_virtctl_ssh_config_path }}"
     mode: "0600"
     content: |
-      Host vm/*
+      # virtctl v1.7+ expects vm/name/namespace (not vm/name.namespace).
+      Host vm/*/*
         ProxyCommand env KUBECONFIG={{ roxagent_kubeconfig_path }} {{ roxagent_virtctl_binary }} port-forward --stdio=true %h %p
   become: false
   delegate_to: localhost
@@ -235,12 +236,12 @@
           kubevirt_vm: "{{ _roxagent_kubevirt_vm_name }}"
           kubevirt_namespace: "{{ _roxagent_kubevirt_namespace }}"
           ansible_user: "{{ _roxagent_ssh_user_resolved }}"
-          ansible_host: "vm/{{ _roxagent_kubevirt_vm_name }}.{{ _roxagent_kubevirt_namespace }}"
+          ansible_host: "vm/{{ _roxagent_kubevirt_vm_name }}/{{ _roxagent_kubevirt_namespace }}"
           kubeconfig: "{{ roxagent_kubeconfig_path }}"
 
     - name: Configure virtctl SSH transport for KubeVirt VMs
       ansible.builtin.set_fact:
-        ansible_host: "vm/{{ _roxagent_kubevirt_vm_name }}.{{ _roxagent_kubevirt_namespace }}"
+        ansible_host: "vm/{{ _roxagent_kubevirt_vm_name }}/{{ _roxagent_kubevirt_namespace }}"
         ansible_user: "{{ _roxagent_ssh_user_resolved }}"
         ansible_ssh_common_args: "{{ roxagent_virtctl_ssh_common_args }}"
         ansible_control_path: "{{ roxagent_virtctl_ssh_control_path | replace('%C', '%%C') }}"
