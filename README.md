@@ -11,7 +11,8 @@ The role deploys Podman Quadlet units (`roxagent.image`, `roxagent.container`) a
 ## Requirements
 
 - Red Hat Enterprise Linux 9 or 10 with an active subscription
-- Podman (installed by the role)
+- Podman (installed by the role when missing)
+- At least one DNF package transaction on the host (`/var/lib/dnf/history.sqlite`) for repo-to-package mapping; the role runs `dnf update` via handler when no package history exists yet (common on RHEL 10 image-based VMs)
 - For KubeVirt/AAP deployments: `virtctl` on the controller/execution environment and an OpenShift or Kubernetes API credential
 
 ## Role Variables
@@ -25,6 +26,7 @@ See [defaults/main.yml](defaults/main.yml) for the full list. Common variables:
 | `roxagent_registry_auth` | `{}` | Full pull-secret auth dict (alternative to username/password) |
 | `roxagent_virtctl_ssh` | `true` | Route SSH through virtctl for pod-network VMs, or VMs on another Cluster then AAP |
 | `roxagent_run_initial_scan` | `true` | Start an initial scan after configuration |
+| `roxagent_dnf_seed_history` | `true` | Run `dnf update` when DNF package transaction history is empty |
 
 ## Example Playbook
 

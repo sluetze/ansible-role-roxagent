@@ -16,6 +16,10 @@ roxagent_registry_password: ""
 
 roxagent_run_initial_scan: true
 
+# Run dnf update (handler) when no package transactions exist in history.sqlite
+# (makecache alone is not sufficient for roxagent repo-to-package mapping).
+roxagent_dnf_seed_history: true
+
 roxagent_timer_on_boot_sec: 5min
 roxagent_timer_on_unit_active_sec: 3h40m
 roxagent_timer_randomized_delay_sec: 40min

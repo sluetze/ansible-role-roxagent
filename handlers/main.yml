@@ -1,4 +1,10 @@
 ---
+- name: Seed DNF history with update
+  ansible.builtin.dnf:
+    name: '*'
+    state: latest
+  when: roxagent_dnf_seed_history | bool
+
 - name: Roxagent systemd daemon-reload
   ansible.builtin.systemd:
     daemon_reload: true
