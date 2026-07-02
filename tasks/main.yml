@@ -17,18 +17,6 @@
 
 - name: Ensure virtio-vsock guest device is available for RHACS scanning
   block:
-    - name: Load virtio-vsock guest kernel modules
-      ansible.builtin.command:
-        argv:
-          - modprobe
-          - "{{ item }}"
-      loop:
-        - vsock
-        - vmw_vsock_virtio_transport
-      register: roxagent_vsock_modprobe
-      changed_when: roxagent_vsock_modprobe.rc == 0
-      failed_when: false
-
     - name: Verify virtio-vsock guest device is present
       ansible.builtin.stat:
         path: /dev/vsock
