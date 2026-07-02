@@ -14,51 +14,6 @@
   register: roxagent_subscription_status
   changed_when: false
   failed_when: roxagent_subscription_status.rc != 0
-# Roxagent (via Claircore) maps each installed RPM to a DNF repoid using
-# /var/lib/dnf/history.sqlite trans_item rows — not /var/cache/dnf repodata.
-# Image-based VMs might have no package transactions, which
-# breaks repo-to-CPE mapping and degrades VM vulnerability results.
-#
-# Alternatives considered and why we did not keep them:
-# - dnf reinstall podman — puts the package in the transaction history, but maps it to @system,
-#   leading to subsequent scans missing this component
-# - dnf repository-packages <repo> move-to podman — same per-package limit;
-#   identical history.sqlite shape to plain reinstall for that package.
-#
-# dnf update when history is empty matches the RHACS prerequisite, is gated
-# by roxagent_dnf_seed_history, and runs via handler only when needed.
-- name: Ensure DNF transaction history exists for roxagent host scanning
-  when: roxagent_dnf_seed_history | bool
-  block:
-    - name: Check for DNF package transaction history
-      ansible.builtin.command:
-        argv:
-          - dnf
-          - history
-          - list
-      register: roxagent_dnf_history
-      changed_when: false
-      failed_when: false
-
-    - name: Record whether DNF package transaction history is missing
-      ansible.builtin.set_fact:
-        roxagent_dnf_package_history_missing: >-
-          {{
-            roxagent_dnf_history.stdout_lines
-            | select('match', '^\s*\d+\s+\|')
-            | reject('search', 'makecache')
-            | list
-            | length == 0
-          }}
-
-    - name: Request DNF history seeding via update
-      ansible.builtin.debug:
-        msg: >-
-          DNF package transaction history is missing; scheduling dnf update to
-          seed history for roxagent.
-      changed_when: true
-      notify: Seed DNF history with update
-      when: roxagent_dnf_package_history_missing | bool
 
 - name: Ensure virtio-vsock guest device is available for RHACS scanning
   block:
@@ -94,8 +49,60 @@
   ansible.builtin.dnf:
     name: podman
     state: present
+  register: roxagent_podman_install
   tags:
     - roxagent_install
+
+# Roxagent (via Claircore) maps each installed RPM to a DNF repoid using
+# /var/lib/dnf/history.sqlite trans_item rows — not /var/cache/dnf repodata.
+# Image-based VMs might have no package transactions, which
+# breaks repo-to-CPE mapping and degrades VM vulnerability results.
+#
+# Alternatives considered and why we did not keep them:
+# - dnf reinstall podman — puts the package in the transaction history, but maps it to @system,
+#   leading to subsequent scans missing this component
+# - dnf repository-packages <repo> move-to podman — same per-package limit;
+#   identical history.sqlite shape to plain reinstall for that package.
+#
+# dnf update when history is empty matches the RHACS prerequisite, is gated
+# by roxagent_dnf_seed_history, and runs via handler only when needed.
+# Skipped when Install Podman changed: that install already records a DNF
+# transaction. When podman was already present (no change), check history and
+# seed with dnf update if still empty.
+- name: Ensure DNF transaction history exists for roxagent host scanning
+  when:
+    - roxagent_dnf_seed_history | bool
+    - not roxagent_podman_install.changed | bool
+  block:
+    - name: Check for DNF package transaction history
+      ansible.builtin.command:
+        argv:
+          - dnf
+          - history
+          - list
+      register: roxagent_dnf_history
+      changed_when: false
+      failed_when: false
+
+    - name: Record whether DNF package transaction history is missing
+      ansible.builtin.set_fact:
+        roxagent_dnf_package_history_missing: >-
+          {{
+            roxagent_dnf_history.stdout_lines
+            | select('match', '^\s*\d+\s+\|')
+            | reject('search', 'makecache')
+            | list
+            | length == 0
+          }}
+
+    - name: Request DNF history seeding via update
+      ansible.builtin.debug:
+        msg: >-
+          DNF package transaction history is missing; scheduling dnf update to
+          seed history for roxagent.
+      changed_when: true
+      notify: Seed DNF history with update
+      when: roxagent_dnf_package_history_missing | bool
 
 - name: Ensure roxagent state directory exists
   ansible.builtin.file:
