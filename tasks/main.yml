@@ -226,7 +226,9 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Roxagent systemd daemon-reload
+  notify:
+    - Roxagent systemd daemon-reload
+    - Roxagent run scan
 
 - name: Deploy roxagent Quadlet container unit
   ansible.builtin.template:
@@ -235,7 +237,9 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Roxagent systemd daemon-reload
+  notify:
+    - Roxagent systemd daemon-reload
+    - Roxagent run scan
 
 - name: Restore SELinux contexts on roxagent unit files
   ansible.builtin.command:
@@ -265,14 +269,3 @@
     enabled: true
     state: started
     daemon_reload: true
-
-- name: Trigger initial roxagent scan
-  ansible.builtin.command:
-    argv:
-      - systemctl
-      - start
-      - roxagent.service
-  register: roxagent_initial_scan
-  changed_when: roxagent_initial_scan.rc == 0
-  failed_when: false
-  when: roxagent_run_initial_scan | bool
